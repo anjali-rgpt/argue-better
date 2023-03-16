@@ -1,0 +1,8 @@
+numpy==1.21.4
+pandas==1.2.2
+-f https://download.pytorch.org/whl/torch_stable.html
+torch==1.10.0+cu113
+-f https://download.pytorch.org/whl/torch_stable.html
+torchvision==0.11.1+cu113
+torchsummary==1.5.1
+transformers==4.15.0

@@ -1,5 +1,7 @@
 data/label/
+data/essays_all/
 data/effectiveness/
 .DS_Store
 downloads/
 .ipynb_checkpoints/
+similarity_matrix.npy

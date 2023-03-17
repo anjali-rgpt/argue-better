@@ -1,9 +1,17 @@
 import os
+os.environ['MASTER_ADDR'] = 'localhost'
+os.environ['MASTER_PORT'] = '9994'
+os.environ['RANK'] = "0"
+os.environ['LOCAL_RANK'] = "0"
+os.environ['WORLD_SIZE'] = "1"
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["DEEPSPEED_ENABLE_PROFILING"] = "1"
 import pandas as pd
 from tqdm import tqdm
 
 import torch
 from torch.utils.data import Dataset, random_split
+from torch.profiler import profile, record_function, ProfilerActivity
 from transformers import AutoTokenizer, TrainingArguments, Trainer, AutoModelForCausalLM, IntervalStrategy
 
 # Dataset Class
@@ -61,6 +69,7 @@ tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neo-2.7B",
 
 model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neo-2.7B").cuda()
 model.resize_token_embeddings(len(tokenizer))
+
 train_dataset, val_dataset = load_dataset(tokenizer)
 
 # train
@@ -84,7 +93,14 @@ trainer = Trainer(model=model,
         data_collator=lambda data: {'input_ids': torch.stack([f[0] for f in data]),
                                     'attention_mask': torch.stack([f[1] for f in data]),
                                     'labels': torch.stack([f[0] for f in data])})
-trainer.train()
+
+print("start training")
+
+with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as prof:
+    with record_function("model_inference"):
+        trainer.train()
+
+prof.export_chrome_trace("profile.json")
 
 # eval
 
@@ -109,4 +125,4 @@ for argument, example in tqdm(zip(val_dataset[0], val_dataset[1])):
 
     print("Input: {}\nPred: {}\nTrue: {}\n\n".format(argument, pred, example))
 
-                                              
+                                           

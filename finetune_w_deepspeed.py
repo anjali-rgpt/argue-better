@@ -62,12 +62,15 @@ def load_dataset(tokenizer):
     return train_dataset, (val_args, val_exps)
 
 torch.manual_seed(42)
-tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neo-2.7B", 
+model_name = "gpt2"
+#model_name = "EleutherAI/gpt-neo-2.7B"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name, 
                                           bos_token='<startoftext>', 
                                           eos_token='<endoftext>', 
                                           pad_token='<pad>')
 
-model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neo-2.7B").cuda()
+model = AutoModelForCausalLM.from_pretrained(model_name).cuda()
 model.resize_token_embeddings(len(tokenizer))
 
 train_dataset, val_dataset = load_dataset(tokenizer)
@@ -75,16 +78,16 @@ train_dataset, val_dataset = load_dataset(tokenizer)
 # train
 
 training_args = TrainingArguments(output_dir='./results', 
-                                  num_train_epochs=4.3, 
+                                  num_train_epochs=5, 
                                   logging_steps=500, 
                                   save_strategy=IntervalStrategy.NO,
-                                  per_device_train_batch_size=15, 
-                                  per_device_eval_batch_size=15, 
+                                  per_device_train_batch_size=2, 
+                                  per_device_eval_batch_size=2, 
                                   warmup_steps=50,
                                   weight_decay=0.01, 
                                   logging_dir='./logs', 
                                   fp16=True, 
-                                  deepspeed='./ds_config_gpt_neo_27.json')
+                                  deepspeed='./ds_config.json')
     
 trainer = Trainer(model=model, 
         args=training_args, 
@@ -96,11 +99,7 @@ trainer = Trainer(model=model,
 
 print("start training")
 
-with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as prof:
-    with record_function("model_inference"):
-        trainer.train()
-
-prof.export_chrome_trace("profile.json")
+trainer.train()
 
 # eval
 

@@ -1,4 +1,11 @@
 import os
+os.environ['MASTER_ADDR'] = 'localhost'
+os.environ['MASTER_PORT'] = '9994'
+os.environ['RANK'] = "0"
+os.environ['LOCAL_RANK'] = "0"
+os.environ['WORLD_SIZE'] = "1"
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 import pandas as pd
 from tqdm import tqdm
 
@@ -55,12 +62,12 @@ def load_dataset(tokenizer):
     return train_dataset, (val_args, val_exps)
 
 torch.manual_seed(42)
-tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neo-1.3B", 
+tokenizer = AutoTokenizer.from_pretrained("gpt2", 
                                           bos_token='<startoftext>', 
                                           eos_token='<endoftext>', 
                                           pad_token='<pad>')
 
-model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neo-1.3B").cuda()
+model = AutoModelForCausalLM.from_pretrained("gpt2").cuda()
 model.resize_token_embeddings(len(tokenizer))
 
 train_dataset, val_dataset = load_dataset(tokenizer)

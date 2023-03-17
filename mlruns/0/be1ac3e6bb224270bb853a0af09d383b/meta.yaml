@@ -1,0 +1,15 @@
+artifact_uri: file:///home/ubuntu/cs224n/argue-better/mlruns/0/be1ac3e6bb224270bb853a0af09d383b/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: be1ac3e6bb224270bb853a0af09d383b
+run_name: capable-auk-759
+run_uuid: be1ac3e6bb224270bb853a0af09d383b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1679072781338
+status: 1
+tags: []
+user_id: ubuntu

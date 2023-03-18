@@ -7,3 +7,4 @@ data/effectiveness/
 downloads/
 .ipynb_checkpoints/
 similarity_matrix.npy
+transformers/

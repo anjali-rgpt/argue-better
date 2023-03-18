@@ -34,7 +34,7 @@ def prepare_dataset(tokenizer):
         return model_inputs
     
     # load dataset
-    dataset = load_dataset("a98zhang/ibm_argument_example_sample")['train']
+    dataset = load_dataset("a98zhang/ibm_argue_example_sample")['train']
     
     prompt_template = f'Rewrite the following argument more effectively: {{input}}\nImproved argument: '
     prompt_length = len(tokenizer(prompt_template.format(input=""))["input_ids"])

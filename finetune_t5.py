@@ -12,18 +12,16 @@ from tqdm import tqdm
 import random
 
 import torch
-from datasets import concatenate_datasets
+from datasets import concatenate_datasets, load_dataset
 from torch.utils.data import Dataset, Subset, random_split
 from torch.profiler import profile, record_function, ProfilerActivity
 from transformers import AutoTokenizer, TrainingArguments, Trainer, AutoModelForSeq2SeqLM, IntervalStrategy, DataCollatorForSeq2Seq
 
-def load_dataset(tokenizer):
+def prepare_dataset(tokenizer):
     # load dataset
-    filepath = "data/IBM_Debater_(R)_arg_quality_rank_30k/arg_quality_rank_30k_examples.csv"
     dataset = load_dataset("a98zhang/ibm_argument_example")
-    dataset = dataset.remove_columns(["WA", "MACE-P"])
-
-    prompt_template = f'Rewrite the following argument more effectively: {{argument}}\nImproved argument: '
+    
+    prompt_template = f'Rewrite the following argument more effectively: {{input}}\nImproved argument: '
     prompt_length = len(tokenizer(prompt_template.format(input=""))["input_ids"])
     max_sample_length = tokenizer.model_max_length - prompt_length
     print(f"Prompt length: {prompt_length}")
@@ -75,18 +73,13 @@ def preprocess(dataset, tokenizer, prompt_template, max_target_length):
 torch.manual_seed(42)
 model_name = "google/flan-t5-base"  #"gpt2"  "EleutherAI/gpt-neo-2.7B"
 
-tokenizer = AutoTokenizer.from_pretrained(model_name, 
-                                          bos_token='<|startoftext|>', 
-                                          eos_token='<|endoftext|>', 
-                                          sep_token='<|sep|>',
-                                          pad_token='<pad>')
+tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 model = AutoModelForSeq2SeqLM.from_pretrained(model_name).cuda()
 #model = AutoModelForCausalLM.from_pretrained(model_name).cuda()
 model.resize_token_embeddings(len(tokenizer))
 
-train_dataset, test_dataset = load_dataset(tokenizer)
-
+train_dataset, test_dataset = prepare_dataset(tokenizer)
 # train
 
 training_args = TrainingArguments(output_dir='./results', 

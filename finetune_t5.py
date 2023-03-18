@@ -18,8 +18,23 @@ from torch.profiler import profile, record_function, ProfilerActivity
 from transformers import AutoTokenizer, TrainingArguments, Trainer, AutoModelForSeq2SeqLM, IntervalStrategy, DataCollatorForSeq2Seq
 
 def prepare_dataset(tokenizer):
+
+    def preprocess(dataset):
+
+        inputs = [prompt_template.format(input=arg) for arg in dataset['argument']]
+        model_inputs = tokenizer(inputs, max_length=tokenizer.model_max_length, padding='max_length', truncation=True)
+
+        # Tokenize targets with the `text_target` keyword argument
+        labels = tokenizer(text_target=dataset['example'], max_length=max_target_length, padding='max_length', truncation=True)
+        labels["input_ids"] = [
+                [(l if l != tokenizer.pad_token_id else -100) for l in label] for label in labels["input_ids"]
+                ]
+
+        model_inputs["labels"] = labels["input_ids"]
+        return model_inputs
+    
     # load dataset
-    dataset = load_dataset("a98zhang/ibm_argument_example")['train']
+    dataset = load_dataset("a98zhang/ibm_argument_example_sample")['train']
     
     prompt_template = f'Rewrite the following argument more effectively: {{input}}\nImproved argument: '
     prompt_length = len(tokenizer(prompt_template.format(input=""))["input_ids"])
@@ -42,9 +57,6 @@ def prepare_dataset(tokenizer):
     max_target_length = int(np.percentile(target_lenghts, 95))
     print(f"Max target length: {max_target_length}")
 
-    # TO TURN OFF
-    #dataset = dataset.sample(500).reset_index()
-
     # split 
     dataset = dataset.train_test_split(test_size=0.01)
 
@@ -52,21 +64,6 @@ def prepare_dataset(tokenizer):
     tokenized_trained = dataset["train"].map(preprocess, batched=True, remove_columns=['argument', 'example', 'topic'])
     
     return tokenized_trained, dataset["test"]
-
-
-def preprocess(dataset, tokenizer, prompt_template, max_target_length):
-
-    inputs = [prompt_template.format(input=arg) for arg in dataset['argument']]
-    model_inputs = tokenizer(inputs, max_length=tokenizer.model_max_length, padding='max_length', truncation=True)
-
-    # Tokenize targets with the `text_target` keyword argument
-    labels = tokenizer(text_target=dataset['example'], max_length=max_target_length, padding='max_length', truncation=True)
-    labels["input_ids"] = [
-            [(l if l != tokenizer.pad_token_id else -100) for l in label] for label in labels["input_ids"]
-            ]
-
-    model_inputs["labels"] = labels["input_ids"]
-    return model_inputs
 
 # load data, tokenizer, and model
 
@@ -76,8 +73,6 @@ model_name = "google/flan-t5-base"  #"gpt2"  "EleutherAI/gpt-neo-2.7B"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 model = AutoModelForSeq2SeqLM.from_pretrained(model_name).cuda()
-#model = AutoModelForCausalLM.from_pretrained(model_name).cuda()
-model.resize_token_embeddings(len(tokenizer))
 
 train_dataset, test_dataset = prepare_dataset(tokenizer)
 # train

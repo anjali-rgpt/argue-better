@@ -8,19 +8,20 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["DEEPSPEED_ENABLE_PROFILING"] = "1"
 import pandas as pd
 from tqdm import tqdm
+import random
 
 import torch
-from torch.utils.data import Dataset, random_split
+from torch.utils.data import Dataset, Subset, random_split
 from torch.profiler import profile, record_function, ProfilerActivity
 from transformers import AutoTokenizer, TrainingArguments, Trainer, AutoModelForCausalLM, IntervalStrategy
 
 # Dataset Class
 class ExampleDataset(Dataset):
-    def __init__(self, argument_list, example_list, tokenizer, max_length):
+    def __init__(self, argument_list, example_list, topic_list, tokenizer, max_length):
         self.input_ids = []
         self.attn_masks = []
-        for argument, example in zip(argument_list, example_list):
-            prep_argument = f'<startoftext>Argument: {argument}\nBetter example: {example}<endoftext>'
+        for argument, example, topic in zip(argument_list, example_list, topic_list):
+            prep_argument = f'<startoftext>Argument: {argument}\nArgue this idea on {topic} better: {example}<endoftext>'
             # tokenize 
             encodings_dict = tokenizer(prep_argument, 
                                        truncation=True,
@@ -44,31 +45,34 @@ def load_dataset(tokenizer):
     # load dataset
     filepath = "data/IBM_Debater_(R)_arg_quality_rank_30k/arg_quality_rank_30k_examples.csv"
     df = pd.read_csv(filepath)
-    df = df.sample(500)
-    arguments = df['argument']
-    examples = df['example']
-    max_length = max([len(tokenizer.encode(txt)) for txt in (arguments + examples)])
-    print("Max length: {}".format(max_length))
+    df = df.sample(500).reset_index()
 
     # split 
-    n = len(arguments)
+    n = len(df)
     n_train = int(0.99 * n)
-    train_args, val_args = random_split(arguments, [n_train, n-n_train])
-    train_exps, val_exps = random_split(examples, [n_train, n-n_train])
+    indices = list(range(n))
+    random.shuffle(indices)
+    train_args = Subset(df['argument'], indices[:n_train])
+    val_args = Subset(df['argument'], indices[n_train:])
+    train_exps = Subset(df['example'], indices[:n_train])
+    val_exps = Subset(df['example'], indices[n_train:])
+    train_tpcs= Subset(df['topic'], indices[:n_train])
+    val_tpcs = Subset(df['topic'], indices[n_train:])
 
      # generate class
-    train_dataset = ExampleDataset(train_args, train_exps, 
-                                   tokenizer, max_length=max_length)
+    train_dataset = ExampleDataset(train_args, train_exps, train_tpcs,
+                                   tokenizer, max_length=250)
     
-    return train_dataset, (val_args, val_exps)
+    return train_dataset, (val_args, val_exps, val_tpcs)
 
 torch.manual_seed(42)
 model_name = "gpt2"
 #model_name = "EleutherAI/gpt-neo-2.7B"
 
 tokenizer = AutoTokenizer.from_pretrained(model_name, 
-                                          bos_token='<startoftext>', 
-                                          eos_token='<endoftext>', 
+                                          bos_token='<|startoftext|>', 
+                                          eos_token='<|endoftext|>', 
+                                          sep_token='<|sep|>',
                                           pad_token='<pad>')
 
 model = AutoModelForCausalLM.from_pretrained(model_name).cuda()
@@ -110,9 +114,9 @@ print("start evaluating")
 
 # model = AutoModelForCausalLM.from_pretrained("./models/")
 
-for argument, example in tqdm(zip(val_dataset[0], val_dataset[1])):
+for argument, example, topic in tqdm(zip(val_dataset[0], val_dataset[1], val_dataset[2])):
     #prepare promp
-    prep_argument = f'<startoftext>Argument: {argument}\nBetter example:'
+    prep_argument = f'<startoftext>Argument: {argument}\nArgue this idea on {topic} better: {example}<endoftext>'
     generated = tokenizer(prep_argument, 
                       return_tensors="pt").input_ids.cuda()
     #generate
@@ -120,7 +124,8 @@ for argument, example in tqdm(zip(val_dataset[0], val_dataset[1])):
                                     do_sample=True, 
                                     top_k=50,
                                     bos_token='<startoftext>',
-                                    eos_token='<endoftext>', 
+                                    eos_token='<endoftext>',
+                                    sep_token='<|sep|>',
                                     pad_token='<pad>',
                                     max_length=300, 
                                     top_p=0.95, 

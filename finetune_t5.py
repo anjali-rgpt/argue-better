@@ -60,10 +60,21 @@ def prepare_dataset(tokenizer):
     # split 
     dataset = dataset.train_test_split(test_size=0.01)
 
+    # tokenize train dataset
+    inputs = [prompt_template.format(input=arg) for arg in dataset['train']['argument']]
+    model_inputs = tokenizer(inputs, max_length=tokenizer.model_max_length, padding='max_length', truncation=True)
+
+    labels = tokenizer(text_target=dataset['train']['example'], max_length=max_target_length, padding='max_length', truncation=True)
+    labels["input_ids"] = [
+            [(l if l != tokenizer.pad_token_id else -100) for l in label] for label in labels["input_ids"]
+            ]
+
+    model_inputs["labels"] = labels["input_ids"]
+
     # process dataset
-    tokenized_trained = dataset["train"].map(preprocess, batched=True, remove_columns=['argument', 'example', 'topic'])
+    #tokenized_trained = dataset["train"].map(preprocess, batched=True, remove_columns=['argument', 'example', 'topic'])
     
-    return tokenized_trained, dataset["test"]
+    return model_inputs, dataset["test"]
 
 # load data, tokenizer, and model
 

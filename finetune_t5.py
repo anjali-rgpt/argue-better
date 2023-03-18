@@ -15,24 +15,10 @@ import torch
 from datasets import concatenate_datasets, load_dataset
 from torch.utils.data import Dataset, Subset, random_split
 from torch.profiler import profile, record_function, ProfilerActivity
-from transformers import AutoTokenizer, TrainingArguments, Trainer, AutoModelForSeq2SeqLM, IntervalStrategy, DataCollatorForSeq2Seq
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, DataCollatorForSeq2Seq, Seq2SeqTrainingArguments, Seq2SeqTrainer
 
 def prepare_dataset(tokenizer):
 
-    def preprocess(dataset):
-
-        inputs = [prompt_template.format(input=arg) for arg in dataset['argument']]
-        model_inputs = tokenizer(inputs, max_length=tokenizer.model_max_length, padding='max_length', truncation=True)
-
-        # Tokenize targets with the `text_target` keyword argument
-        labels = tokenizer(text_target=dataset['example'], max_length=max_target_length, padding='max_length', truncation=True)
-        labels["input_ids"] = [
-                [(l if l != tokenizer.pad_token_id else -100) for l in label] for label in labels["input_ids"]
-                ]
-
-        model_inputs["labels"] = labels["input_ids"]
-        return model_inputs
-    
     # load dataset
     dataset = load_dataset("a98zhang/ibm_argue_example_sample")['train']
     
@@ -86,9 +72,19 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSeq2SeqLM.from_pretrained(model_name).cuda()
 
 train_dataset, test_dataset = prepare_dataset(tokenizer)
+
+
 # train
 
-training_args = TrainingArguments(output_dir='./results', 
+data_collator = DataCollatorForSeq2Seq(
+                    tokenizer,
+                    model=model,
+                    label_pad_token_id=-100,
+                    pad_to_multiple_of=8)
+
+generated = tokenizer("<|startoftext|>", return_tensors="pt").input_ids.cuda()
+
+training_args = Seq2SeqTrainingArguments(output_dir='./results', 
                                   num_train_epochs=5, 
                                   logging_steps=500, 
                                   save_strategy=IntervalStrategy.NO,
@@ -100,14 +96,10 @@ training_args = TrainingArguments(output_dir='./results',
                                   fp16=True, 
                                   deepspeed='./ds_config_flan_t5.json')
     
-trainer = Trainer(model=model, 
+trainer = Seq2SeqTrainingArguments(model=model, 
         args=training_args, 
         train_dataset=train_dataset,
-        data_collator = DataCollatorForSeq2Seq(
-                        tokenizer,
-                        model=model,
-                        label_pad_token_id=-100,
-                        pad_to_multiple_of=8))
+        data_collator = data_collator)
 
 print("start training")
 

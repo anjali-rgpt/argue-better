@@ -44,6 +44,7 @@ def load_dataset(tokenizer):
     # load dataset
     filepath = "data/IBM_Debater_(R)_arg_quality_rank_30k/arg_quality_rank_30k_examples.csv"
     df = pd.read_csv(filepath)
+    df = df.sample(500)
     arguments = df['argument']
     examples = df['example']
     max_length = max([len(tokenizer.encode(txt)) for txt in (arguments + examples)])
@@ -101,12 +102,18 @@ print("start training")
 
 trainer.train()
 
+trainer.save_model("./models")
+
 # eval
+
+print("start evaluating")
+
+# model = AutoModelForCausalLM.from_pretrained("./models/")
 
 for argument, example in tqdm(zip(val_dataset[0], val_dataset[1])):
     #prepare promp
     prep_argument = f'<startoftext>Argument: {argument}\nBetter example:'
-    generated = tokenizer("<startoftext>", 
+    generated = tokenizer(prep_argument, 
                       return_tensors="pt").input_ids.cuda()
     #generate
     sample_outputs = model.generate(generated, 

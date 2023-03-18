@@ -19,7 +19,7 @@ from transformers import AutoTokenizer, TrainingArguments, Trainer, AutoModelFor
 
 def prepare_dataset(tokenizer):
     # load dataset
-    dataset = load_dataset("a98zhang/ibm_argument_example")
+    dataset = load_dataset("a98zhang/ibm_argument_example")['train']
     
     prompt_template = f'Rewrite the following argument more effectively: {{input}}\nImproved argument: '
     prompt_length = len(tokenizer(prompt_template.format(input=""))["input_ids"])
@@ -43,7 +43,7 @@ def prepare_dataset(tokenizer):
     print(f"Max target length: {max_target_length}")
 
     # TO TURN OFF
-    dataset = dataset.sample(500).reset_index()
+    #dataset = dataset.sample(500).reset_index()
 
     # split 
     dataset = dataset.train_test_split(test_size=0.01)

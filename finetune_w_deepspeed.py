@@ -21,7 +21,7 @@ class ExampleDataset(Dataset):
         self.input_ids = []
         self.attn_masks = []
         for argument, example, topic in zip(argument_list, example_list, topic_list):
-            prep_argument = f'<startoftext>Argument: {argument}\nArgue this idea on {topic} better: {example}<endoftext>'
+            prep_argument = f'<|startoftext|>Argument: {argument}\nArgue this idea on {topic} better: {example}<|endoftext|>'
             # tokenize 
             encodings_dict = tokenizer(prep_argument, 
                                        truncation=True,
@@ -116,24 +116,24 @@ print("start evaluating")
 
 for argument, example, topic in tqdm(zip(val_dataset[0], val_dataset[1], val_dataset[2])):
     #prepare promp
-    prep_argument = f'<startoftext>Argument: {argument}\nArgue this idea on {topic} better: {example}<endoftext>'
+    prep_argument = f'<|startoftext|>Argument: {argument}\nArgue this idea on {topic} better:'
     generated = tokenizer(prep_argument, 
                       return_tensors="pt").input_ids.cuda()
     #generate
     sample_outputs = model.generate(generated, 
                                     do_sample=True, 
                                     top_k=50,
-                                    bos_token='<startoftext>',
-                                    eos_token='<endoftext>',
+                                    bos_token='<|startoftext|>',
+                                    eos_token='<|endoftext|>',
                                     sep_token='<|sep|>',
                                     pad_token='<pad>',
-                                    max_length=300, 
+                                    max_length=len(argument), 
                                     top_p=0.95, 
                                     temperature=1.9, 
                                     num_return_sequences=20)
 
     pred = tokenizer.decode(sample_outputs[0], skip_special_tokens=True)
 
-    print("Input: {}\nPred: {}\nTrue: {}\n\n".format(argument, pred, example))
+    print("Input: {}\n\nPred: {}\n\nTrue: {}\n\n\n\n\n".format(argument, pred, example))
 
                                            

@@ -1,3 +1,5 @@
+models/
+mlruns/
 data/label/
 data/essays_all/
 data/effectiveness/

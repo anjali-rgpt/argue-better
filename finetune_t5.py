@@ -20,7 +20,7 @@ from transformers import AutoTokenizer, TrainingArguments, Trainer, AutoModelFor
 def load_dataset(tokenizer):
     # load dataset
     filepath = "data/IBM_Debater_(R)_arg_quality_rank_30k/arg_quality_rank_30k_examples.csv"
-    dataset = load_dataset('csv', data_files=filepath)
+    dataset = load_dataset("a98zhang/ibm_argument_example")
     dataset = dataset.remove_columns(["WA", "MACE-P"])
 
     prompt_template = f'Rewrite the following argument more effectively: {{argument}}\nImproved argument: '

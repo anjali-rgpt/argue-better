@@ -22,7 +22,7 @@ class ExampleDataset(Dataset):
         self.attn_masks = []
         for argument, example, topic, disctype in zip(argument_list, example_list, topic_list, disctype_list):
             prep_argument = (f'<|startoftext|>Give a better example for this ineffective {disctype}'
-                             f' : {argument}Better example : {example}<|endoftext|>')
+                             f' : {argument}<|sep|>Better example : {example}<|endoftext|>')
             # tokenize 
             encodings_dict = tokenizer(prep_argument, 
                                        truncation=True,
@@ -73,7 +73,10 @@ def load_dataset(tokenizer):
 torch.manual_seed(42)
 model_name = "gpt2"
 #model_name = "EleutherAI/gpt-neo-2.7B"
-#special_tokens_dict = {'eos_token': eos, 'bos_token': bos, 'pad_token': pad}
+#special_tokens_dict = {'eos_token': <|endoftext|>, 
+#                       'bos_token': <|startoftext|>, 
+#                       'sep_token': <|sep|>, 
+#                       'pad_token': <pad>}}
 #tokenizer_orig.add_special_tokens(special_tokens_dict)
 tokenizer = AutoTokenizer.from_pretrained(model_name, 
                                           bos_token='<|startoftext|>', 
@@ -126,7 +129,7 @@ idx = 0
 for argument, example, topic, disctype in tqdm(zip(val_dataset[0], val_dataset[1], val_dataset[2], val_dataset[3])):
     #prepare promp
     prep_argument = (f'<|startoftext|>Give a better example for this ineffective {disctype}'
-                             f' : {argument}Better example : ')
+                             f' : {argument}<|sep|>Better example : ')
     generated = tokenizer(prep_argument, 
                       return_tensors="pt").input_ids.cuda()
     #generate
@@ -137,7 +140,7 @@ for argument, example, topic, disctype in tqdm(zip(val_dataset[0], val_dataset[1
                                     eos_token='<|endoftext|>',
                                     sep_token='<|sep|>',
                                     pad_token='<pad>',
-                                    max_length=len(argument), 
+                                    max_length=len(argument)*1.5,   #len
                                     top_p=0.95, 
                                     temperature=1.9, 
                                     num_return_sequences=20)
@@ -152,6 +155,7 @@ for argument, example, topic, disctype in tqdm(zip(val_dataset[0], val_dataset[1
 
     print(f'input: {argument}\npred: {pred}\ntrue: {example}')
 
-json_output = json.dumps(results, indent=4) 
-#with open("data/effective/finetune_gpt2_example_aug.json", "w") as outfile:
-#        outfile.write(json_output)
+#json_output = json.dumps(results, indent=4) 
+with open("data/effective/finetune_gpt2_example_aug.json", "w") as outfile:
+    json.dump(results, outfile)
+#    outfile.write(json_output)

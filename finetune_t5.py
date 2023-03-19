@@ -15,7 +15,7 @@ import torch
 from datasets import concatenate_datasets, load_dataset
 from torch.utils.data import Dataset, Subset, random_split
 from torch.profiler import profile, record_function, ProfilerActivity
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, DataCollatorForSeq2Seq, Seq2SeqTrainingArguments, Seq2SeqTrainer
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, DataCollatorForSeq2Seq, Seq2SeqTrainingArguments, Seq2SeqTrainer, IntervalStrategy
 
 def prepare_dataset(tokenizer):
 
@@ -47,20 +47,24 @@ def prepare_dataset(tokenizer):
     dataset = dataset.train_test_split(test_size=0.01)
 
     # tokenize train dataset
-    inputs = [prompt_template.format(input=arg) for arg in dataset['train']['argument']]
-    model_inputs = tokenizer(inputs, max_length=tokenizer.model_max_length, padding='max_length', truncation=True)
+    def preprocess(data):
 
-    labels = tokenizer(text_target=dataset['train']['example'], max_length=max_target_length, padding='max_length', truncation=True)
-    labels["input_ids"] = [
+    	inputs = [prompt_template.format(input=arg) for arg in data['argument']]
+    	model_inputs = tokenizer(inputs, max_length=tokenizer.model_max_length, padding='max_length', truncation=True)
+
+    	labels = tokenizer(text_target=data['example'], max_length=max_target_length, padding='max_length', truncation=True)
+    	labels["input_ids"] = [
             [(l if l != tokenizer.pad_token_id else -100) for l in label] for label in labels["input_ids"]
             ]
 
-    model_inputs["labels"] = labels["input_ids"]
+    	model_inputs["labels"] = labels["input_ids"]
+	
+	return model_inputs
 
     # process dataset
-    #tokenized_trained = dataset["train"].map(preprocess, batched=True, remove_columns=['argument', 'example', 'topic'])
+    tokenized_trained = dataset["train"].map(preprocess, batched=True, remove_columns=['argument', 'example', 'topic'])
     
-    return model_inputs, dataset["test"]
+    return tokenized_trained, dataset["test"]
 
 # load data, tokenizer, and model
 
@@ -76,12 +80,8 @@ train_dataset, test_dataset = prepare_dataset(tokenizer)
 
 # train
 
-data_collator = DataCollatorForSeq2Seq(
-                    tokenizer,
-                    model=model,
-                    label_pad_token_id=-100,
-                    pad_to_multiple_of=8)
-
+data_collator = DataCollatorForSeq2Seq(tokenizer)
+         
 generated = tokenizer("<|startoftext|>", return_tensors="pt").input_ids.cuda()
 
 training_args = Seq2SeqTrainingArguments(output_dir='./results', 
@@ -96,7 +96,7 @@ training_args = Seq2SeqTrainingArguments(output_dir='./results',
                                   fp16=True, 
                                   deepspeed='./ds_config_flan_t5.json')
     
-trainer = Seq2SeqTrainingArguments(model=model, 
+trainer = Seq2SeqTrainer(model=model, 
         args=training_args, 
         train_dataset=train_dataset,
         data_collator = data_collator)

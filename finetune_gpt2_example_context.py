@@ -55,8 +55,8 @@ def load_dataset(tokenizer):
     random.shuffle(indices)
     train_args = Subset(df['discourse_text'], indices[:n_train])
     val_args = Subset(df['discourse_text'], indices[n_train:])
-    train_exps = Subset(df['predictions'], indices[:n_train])
-    val_exps = Subset(df['predictions'], indices[n_train:])
+    train_exps = Subset(df['augmented_predictions'], indices[:n_train])
+    val_exps = Subset(df['augmented_predictions'], indices[n_train:])
     train_tpcs = Subset(df['topics'], indices[:n_train])
     val_tpcs = Subset(df['topics'], indices[n_train:])
     train_typs = Subset(df['discourse_type'], indices[:n_train])
@@ -67,7 +67,7 @@ def load_dataset(tokenizer):
 
      # generate class
     train_dataset = ExampleDataset(train_args, train_exps, train_tpcs, train_typs, train_cnts,
-                                   tokenizer, max_length=tokenizer.model_max_length)
+                                   tokenizer, max_length=tokenizer.model_max_length) #1024
     
     return train_dataset, (val_args, val_exps, val_tpcs, val_typs, val_cnts)
 
@@ -143,11 +143,12 @@ for argument, example, topic, disctype, context in tqdm(zip(val_dataset[0], val_
                                     num_return_sequences=20)
 
     pred = tokenizer.decode(sample_outputs[0], skip_special_tokens=True)
+    pred = pred.replace(prep_argument, '')
     results[idx] = {'input': argument, 
                     'pred': pred,
                     'true': example}
     idx += 1
 
 json_output = json.dumps(results, indent=4) 
-with open("data/effective/finetune_gpt2_example_context.json", "w") as outfile:
+with open("data/effective/finetune_gpt2_example_context1.json", "w") as outfile:
         outfile.write(json_output)

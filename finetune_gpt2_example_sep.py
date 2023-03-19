@@ -42,9 +42,9 @@ class ExampleDataset(Dataset):
     
 def load_dataset(tokenizer):
     # load dataset
-    filepath = "augmented_predictions_all.csv"
+    filepath = "data/effective/augmented_predictions_all.csv"
     df = pd.read_csv(filepath)
-    #df = df.sample(1000).reset_index()
+    df = df.sample(1000).reset_index()
     max_length = max([len(tokenizer.encode(text)) for text in df['discourse_text']])
     print("Max length: {}".format(max_length))
     
@@ -55,8 +55,8 @@ def load_dataset(tokenizer):
     random.shuffle(indices)
     train_args = Subset(df['discourse_text'], indices[:n_train])
     val_args = Subset(df['discourse_text'], indices[n_train:])
-    train_exps = Subset(df['predictions'], indices[:n_train])
-    val_exps = Subset(df['predictions'], indices[n_train:])
+    train_exps = Subset(df['augmented_predictions'], indices[:n_train])
+    val_exps = Subset(df['augmented_predictions'], indices[n_train:])
     train_tpcs = Subset(df['topics'], indices[:n_train])
     val_tpcs = Subset(df['topics'], indices[n_train:])
     train_typs = Subset(df['discourse_type'], indices[:n_train])
@@ -140,10 +140,12 @@ for argument, example, topic, disctype in tqdm(zip(val_dataset[0], val_dataset[1
                                     num_return_sequences=20)
 
     pred = tokenizer.decode(sample_outputs[0], skip_special_tokens=True)
+    pred = pred.replace(prep_argument, '')
     results[idx] = {'input': argument, 
                     'pred': pred,
                     'true': example}
     idx += 1
+    print("input: {}\npred: {}\ntrue: {}".format(argument, pred, example))
 
 json_output = json.dumps(results, indent=4) 
 with open("data/effective/finetune_gpt2_example_sep.json", "w") as outfile:

@@ -67,7 +67,7 @@ def load_dataset(tokenizer):
 
      # generate class
     train_dataset = ExampleDataset(train_args, train_exps, train_tpcs, train_typs,
-                                   tokenizer, max_length=250)
+                                   tokenizer, max_length=tokenizer.model_max_length)
     
     return train_dataset, (val_args, val_exps, val_tpcs, val_typs)
 

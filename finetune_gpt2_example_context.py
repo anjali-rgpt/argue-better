@@ -42,7 +42,7 @@ class ExampleDataset(Dataset):
     
 def load_dataset(tokenizer):
     # load dataset
-    filepath = "augmented_predictions_all.csv"
+    filepath = "data/effective/augmented_predictions_all.csv"
     df = pd.read_csv(filepath)
     df = df.sample(1000).reset_index()
     max_length = max([len(tokenizer.encode(text)) for text in df['discourse_text']]) + max([len(tokenizer.encode(text)) for text in df['context_predictions']]) + 150
@@ -66,7 +66,7 @@ def load_dataset(tokenizer):
 
 
      # generate class
-    train_dataset = ExampleDataset(train_args, train_exps, train_tpcs, train_typs, train_cnts
+    train_dataset = ExampleDataset(train_args, train_exps, train_tpcs, train_typs, train_cnts,
                                    tokenizer, max_length=tokenizer.model_max_length)
     
     return train_dataset, (val_args, val_exps, val_tpcs, val_typs, val_cnts)

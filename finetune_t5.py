@@ -16,6 +16,7 @@ from datasets import concatenate_datasets, load_dataset, load_metric
 from torch.utils.data import Dataset, Subset, random_split
 from torch.profiler import profile, record_function, ProfilerActivity
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, DataCollatorForSeq2Seq, Seq2SeqTrainingArguments, Seq2SeqTrainer, IntervalStrategy
+import random
 
 def prepare_dataset(tokenizer):
 
@@ -70,6 +71,48 @@ def prepare_dataset(tokenizer):
     tokenized_dataset = dataset.map(preprocess, batched=True, remove_columns=['argument', 'example', 'topic'])
     
     return tokenized_dataset
+
+possible_metrics = ['bertscore', 'bleurt', 'rouge']
+sampled_metric = random.choice(possible_metrics)
+metric = load_metric(sampled_metric)
+
+def compute_metrics(eval_predictions):
+    predictions, labels = eval_predictions
+    decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+    
+    # Replace -100 in the labels as we can't decode them.
+    labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
+    decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+    
+    # Rouge expects a newline after each sentence
+    decoded_preds = ["\n".join(nltk.sent_tokenize(pred.strip()))
+                      for pred in decoded_preds]
+    decoded_labels = ["\n".join(nltk.sent_tokenize(label.strip())) 
+                      for label in decoded_labels]
+    
+    # Compute ROUGE scores
+    result = {}
+    if sampled_metric == "rouge":  # if we consider our task to be something like summarization or paraphrasing
+        result = metric.compute(predictions=decoded_preds, references=decoded_labels,
+                                use_stemmer=True)
+
+        # Extract ROUGE f1 scores
+        result = {key: round(value.mid.fmeasure * 100, 4) for key, value in result.items()}
+    
+    elif sampled_metric == "bertscore":  # if we want to see how well the model predicts specific tokens
+        result = metric.compute(predictions=decoded_preds, references=decoded_labels,
+                                model_type = "t5-large")
+        # result = {key: value.mid.fmeasure * 100 for key, value in result.items() if key == 'f1'}
+        
+    else:  # bleurt score if we want to see how well the model generates tokens
+        result = metric.compute(predictions=decoded_preds, references=decoded_labels, checkpoint="bleurt-tiny-128") 
+    # Add mean generated length to metrics
+    prediction_lens = [np.count_nonzero(pred != tokenizer.pad_token_id)
+                      for pred in predictions]
+    result["gen_len"] = round(np.mean(prediction_lens), 4)
+    
+    return result
+    
 
 # load data, tokenizer, and model
 

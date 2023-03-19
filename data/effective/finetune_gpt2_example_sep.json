@@ -1,0 +1,52 @@
+{
+    "0": {
+        "input": "Some states have a winner takes all system, and what that system does is awards all electors to the winning presidential canidate. But Maine and Nebraska each have a variation of proportional representation. after the prsidential election, our governor prepares a certificate of asertainment, l isting all of the canidates who ran for president in your state along with the names of their respective electors. ",
+        "pred": "Topic name: 0  Discourse type: Evidence  Argument: Some states have a winner takes all system, and what that system does is awards all electors to the winning presidential canidate. But Maine and Nebraska each have a variation of proportional representation. after the prsidential election, our governor prepares a certificate of asertainment, l isting all of the canidates who ran for president in your state along with the names of their respective electors.  \nBetter example: \n \u00a0There is a \"winner of peoples choosing,\" so to you could pick winner who it is but you get all all five of your electors or lucky voters. That, for me. has not worked enough for my election; not in Maine to claim some form on some winner-take all vote winner over. If you were willing to defy fate every state but in Nebraska then we should let some choice in the world determine winner, this country, my country ",
+        "true": "Most states have a \"winner-takes-all\" system (with the exception ofMaine and Nebraska) that awards all electors to the winning presidential candidate in their state.(source 1) There may be an arguement that no state has enough votes to give the presidency to someone; however, this system basically casts away the other votes of those on the side of the opposing candidate, making it undemocratic. Besides that, there is also the chance that a few of the electors go rouge and vote for the opposing candidate. "
+    },
+    "1": {
+        "input": "An electoral college is a collage that helps pick canididates that are running for president in are state. the canidates are chosen by the politial party. the election is held every 4 years on thethe first tuesday of november. ",
+        "pred": "Topic name: 0  Discourse type: Evidence  Argument: An electoral college is a collage that helps pick canididates that are running for president in are state. the canidates are chosen by the politial party. the election is held every 4 years on thethe first tuesday of november.  \nBetter example: ",
+        "true": "The Electoral College is a method of voting for President and Vice President that was produced by our founding fathers in the articles of the Constitution. The Electoral College has been in use for centuries, but it is time that we disregard it. "
+    },
+    "2": {
+        "input": "The popular vote winner could again lose the presidency but the electoral college still has is defenders.\u00a0The popular vote can let peopel pick who they want but the electoral college chooses people for you to select from that they know and have a feeling would do a good job and be a good president.\u00a0People can vote all over the world not knowing what that person is thinking about doing to this world.\u00a0For all we know he or she could be thinking about destroying us and making a whole knew other part of a different world . ",
+        "pred": "Topic name: 0  Discourse type: Evidence  Argument: The popular vote winner could again lose the presidency but the electoral college still has is defenders.\u00a0The popular vote can let peopel pick who they want but the electoral college chooses people for you to select from that they know and have a feeling would do a good job and be a good president.\u00a0People can vote all over the world not knowing what that person is thinking about doing to this world.\u00a0For all we know he or she could be thinking about destroying us and making a whole knew other part of a different world.  \nBetter example: ",
+        "true": "Everyone would get to put in their opinion on who should be the president of the United States. I think that if everyone was to be able to individually vote for their president, there would be less chaos and arguements about the election and also the new president.\u00a0But,\u00a0it is possible that the winner of the electoral vote won't win the national popular vote. But, it is very rare. Some people don't bother voting because of the fact that their vote will have no effect. They have less incentive to pay attention to the campaign than they would have if the president were picked by popular vote. "
+    },
+    "3": {
+        "input": "Such cooperation can educate students on subjects like character building or leadership. ",
+        "pred": "Topic name: 5  Discourse type: Claim  Argument: Such cooperation can educate students on subjects like character building or leadership.  \nBetter example: ",
+        "true": "Lastly, it helps students get involved in what around them. "
+    },
+    "4": {
+        "input": "they can take the information that they are using from the project and actually learn from it. \n",
+        "pred": "Topic name: 6  Discourse type: Claim  Argument: they can take the information that they are using from the project and actually learn from it. \n \nBetter example: ",
+        "true": "they can design a project they know will be possible for them to complete. "
+    },
+    "5": {
+        "input": "First the text states \u00a8 These conditions are far more extreme than anything humans encounter on Earth, such an enviorment wuld crush even a submarine accustomed to diving to deepest parts of our oceans and would liquefy many metals.\u00a8(Paragraph 3) ",
+        "pred": "Topic name: 2  Discourse type: Evidence  Argument: First the text states \u00a8 These conditions are far more extreme than anything humans encounter on Earth, such an enviorment wuld crush even a submarine accustomed to diving to deepest parts of our oceans and would liquefy many metals.\u00a8(Paragraph 3)  \nBetter example: ",
+        "true": "These conditions are far more extreme than anything humans encounter on planet earth. \n"
+    },
+    "6": {
+        "input": "The way students apply themselves is all that matters, ",
+        "pred": "Topic name: 4  Discourse type: Claim  Argument: The way students apply themselves is all that matters,  \nBetter example: ",
+        "true": "each student's priorities "
+    },
+    "7": {
+        "input": "Community service will be beneficial to our school because it will help the students learn self value. ",
+        "pred": "Topic name: 5  Discourse type: Claim  Argument: Community service will be beneficial to our school because it will help the students learn self value.  \nBetter example: ",
+        "true": "Also, community service teaches valuable skills and lessons that one may need later on in life. "
+    },
+    "8": {
+        "input": "It really doesn't matter just show your community some love ",
+        "pred": "Topic name: 5  Discourse type: Concluding Statement  Argument: It really doesn't matter just show your community some love  \nBetter example:  ",
+        "true": "If we have community service it will make our community a nicer place to be with happier people. "
+    },
+    "9": {
+        "input": "I think that they should change the election way of how they are doing it. I think that the president should be chosen by the most popular vote. ",
+        "pred": "Topic name: 0  Discourse type: Position  Argument: I think that they should change the election way of how they are doing it. I think that the president should be chosen by the most popular vote.  \nBetter example:  [ 1 of 60\nAt large the majority wanted change, but also at this state, this problem caused some uncertainty over their selection] ",
+        "true": "To me I think we should change the election by popular vote for the president "
+    }
+}

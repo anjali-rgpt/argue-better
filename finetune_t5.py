@@ -49,17 +49,17 @@ def prepare_dataset(tokenizer):
     # tokenize train dataset
     def preprocess(data):
 
-    	inputs = [prompt_template.format(input=arg) for arg in data['argument']]
-    	model_inputs = tokenizer(inputs, max_length=tokenizer.model_max_length, padding='max_length', truncation=True)
+        inputs = [prompt_template.format(input=arg) for arg in data['argument']]
+        model_inputs = tokenizer(inputs, max_length=tokenizer.model_max_length, padding='max_length', truncation=True)
 
-    	labels = tokenizer(text_target=data['example'], max_length=max_target_length, padding='max_length', truncation=True)
-    	labels["input_ids"] = [
+        labels = tokenizer(text_target=data['example'], max_length=max_target_length, padding='max_length', truncation=True)
+        labels["input_ids"] = [
             [(l if l != tokenizer.pad_token_id else -100) for l in label] for label in labels["input_ids"]
             ]
 
-    	model_inputs["labels"] = labels["input_ids"]
-	
-	return model_inputs
+        model_inputs["labels"] = labels["input_ids"]
+        
+        return model_inputs
 
     # process dataset
     tokenized_trained = dataset["train"].map(preprocess, batched=True, remove_columns=['argument', 'example', 'topic'])

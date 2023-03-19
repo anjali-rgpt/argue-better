@@ -47,7 +47,7 @@ def load_dataset(tokenizer):
     # load dataset
     filepath = "data/effective/dataset_with_best_example_and_topic.csv"
     df = pd.read_csv(filepath)
-    df = df.sample(1000).reset_index()
+    #df = df.sample(1000).reset_index()
     max_length = max([len(tokenizer.encode(text)) for text in df['discourse_text']])
     print("Max length: {}".format(max_length))
     

@@ -57,14 +57,14 @@ def load_dataset(tokenizer):
     n_train = int(0.99 * n)
     indices = list(range(n))
     random.shuffle(indices)
-    train_args = Subset(df['argument'], indices[:n_train])
-    val_args = Subset(df['argument'], indices[n_train:])
-    train_exps = Subset(df['example'], indices[:n_train])
-    val_exps = Subset(df['example'], indices[n_train:])
+    train_args = Subset(df['discourse_text'], indices[:n_train])
+    val_args = Subset(df['discourse_text'], indices[n_train:])
+    train_exps = Subset(df['predictions'], indices[:n_train])
+    val_exps = Subset(df['predictions'], indices[n_train:])
     train_tpcs = Subset(df['example'], indices[:n_train])
     val_tpcs = Subset(df['example'], indices[n_train:])
-    train_typs = Subset(df['example'], indices[:n_train])
-    val_typs = Subset(df['example'], indices[n_train:])
+    train_typs = Subset(df['discourse_type'], indices[:n_train])
+    val_typs = Subset(df['discourse_type'], indices[n_train:])
 
      # generate class
     train_dataset = ExampleDataset(train_args, train_exps, train_tpcs, train_typs,
@@ -127,9 +127,9 @@ idx = 0
 
 for argument, example, topic, disctype in tqdm(zip(val_dataset[0], val_dataset[1], val_dataset[2], val_dataset[3])):
     #prepare promp
-    prep_argument = (f'<|startoftext|>For an essay on the topic {topic}, '
+    prep_argument = (f'<|startoftext|>For an essay on the topic {topic}, \n'
                              f'give a better example for this ineffective {disctype}'
-                             f' : {argument}Better example : {example}<|endoftext|>')
+                             f' : {argument}\nBetter example : ')
     generated = tokenizer(prep_argument, 
                       return_tensors="pt").input_ids.cuda()
     #generate

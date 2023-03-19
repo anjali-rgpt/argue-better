@@ -20,7 +20,7 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, DataCollatorForSe
 def prepare_dataset(tokenizer):
 
     # load dataset
-    dataset = load_dataset("a98zhang/ibm_argue_example_sample")['train']
+    dataset = load_dataset("a98zhang/ibm_argument_example")['train']
     
     prompt_template = f'Rewrite the following argument more effectively: {{input}}\nImproved argument: '
     prompt_length = len(tokenizer(prompt_template.format(input=""))["input_ids"])

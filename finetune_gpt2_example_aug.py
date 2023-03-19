@@ -151,15 +151,15 @@ for argument, example, topic, disctype in tqdm(zip(val_dataset[0], val_dataset[1
                       return_tensors="pt").input_ids.cuda()
     #generate
     sample_outputs = model.generate(generated, 
-                                    do_sample=True, 
-                                    top_k=50,
                                     bos_token='<|startoftext|>',
                                     eos_token='<|endoftext|>',
                                     sep_token='<|sep|>',
                                     pad_token='<pad>',
                                     max_length=len(argument)*1.5,   #len
+                                    do_sample=True, 
+                                    top_k=50,
                                     top_p=0.95, 
-                                    temperature=1.9, 
+                                    #temperature=1.9,  
                                     num_return_sequences=20)
 
     pred = tokenizer.decode(sample_outputs[0], skip_special_tokens=True)

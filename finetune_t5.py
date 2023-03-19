@@ -84,17 +84,23 @@ data_collator = DataCollatorForSeq2Seq(tokenizer)
          
 generated = tokenizer("<|startoftext|>", return_tensors="pt").input_ids.cuda()
 
-training_args = Seq2SeqTrainingArguments(output_dir='./results', 
-                                  num_train_epochs=5, 
-                                  logging_steps=500, 
-                                  save_strategy=IntervalStrategy.NO,
-                                  per_device_train_batch_size=2, 
-                                  per_device_eval_batch_size=2, 
-                                  warmup_steps=100,
-                                  weight_decay=0.01, 
-                                  logging_dir='./logs', 
-                                  fp16=True, 
-                                  deepspeed='./ds_config_flan_t5.json')
+training_args = Seq2SeqTrainingArguments(output_dir='./results',
+                                        per_device_train_batch_size=2,
+                                        per_device_eval_batch_size=2,
+                                        predict_with_generate=True,
+                                        fp16=False,  # T5 overflows with fp16
+                                        bf16=True,  # Use BF16 if available
+                                        learning_rate=5e-5,
+                                        num_train_epochs=4,
+                                        deepspeed='./ds_config_flan_t5.json',
+                                        # logging & evaluation strategies
+                                        logging_dir='./results/logs',
+                                        logging_strategy="steps",
+                                        logging_steps=500,
+                                        evaluation_strategy="epoch",
+                                        save_strategy="epoch",
+                                        save_total_limit=2,
+                                        load_best_model_at_end=True)
     
 trainer = Seq2SeqTrainer(model=model, 
         args=training_args, 

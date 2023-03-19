@@ -50,8 +50,7 @@ def load_dataset(tokenizer):
     filepath = "data/effective/dataset_with_best_example_and_topic.csv"
     df = pd.read_csv(filepath)
     df = df.sample(1000).reset_index()
-    df = df.rename(columns={'discourse_text':'argument',
-                            'predictions':'example'})
+    
     # split 
     n = len(df)
     n_train = int(0.99 * n)
@@ -61,8 +60,8 @@ def load_dataset(tokenizer):
     val_args = Subset(df['discourse_text'], indices[n_train:])
     train_exps = Subset(df['predictions'], indices[:n_train])
     val_exps = Subset(df['predictions'], indices[n_train:])
-    train_tpcs = Subset(df['example'], indices[:n_train])
-    val_tpcs = Subset(df['example'], indices[n_train:])
+    train_tpcs = Subset(df['topics'], indices[:n_train])
+    val_tpcs = Subset(df['topics'], indices[n_train:])
     train_typs = Subset(df['discourse_type'], indices[:n_train])
     val_typs = Subset(df['discourse_type'], indices[n_train:])
 

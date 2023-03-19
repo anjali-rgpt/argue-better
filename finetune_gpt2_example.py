@@ -18,11 +18,14 @@ from transformers import AutoTokenizer, TrainingArguments, Trainer, AutoModelFor
 
 # Dataset Class
 class ExampleDataset(Dataset):
-    def __init__(self, argument_list, example_list, tokenizer, max_length):
+    def __init__(self, argument_list, example_list, topic_list, disctype_list, tokenizer, max_length):
         self.input_ids = []
         self.attn_masks = []
-        for argument, example in zip(argument_list, example_list):
-            prep_argument = f'<|startoftext|>Argument: {argument}\nRewrite a more effective version: {example}<|endoftext|>'
+        for argument, example, topic, disctype in zip(argument_list, example_list, topic_list, disctype_list):
+            prep_argument = (f'<|startoftext|>For an essay on the topic {topic}, '
+                             f'give a better example for this ineffective {disctype}'
+                             f' : {argument}Better example : {example}<|endoftext|>')
+            #prep_argument = f'<|startoftext|>Argument: {argument}\nRewrite a more effective version: {example}<|endoftext|>'
             # tokenize 
             encodings_dict = tokenizer(prep_argument, 
                                        truncation=True,
@@ -46,7 +49,7 @@ def load_dataset(tokenizer):
     # load dataset
     filepath = "data/effective/dataset_with_best_example_and_topic.csv"
     df = pd.read_csv(filepath)
-    df = df.sample(500).reset_index()
+    df = df.sample(1000).reset_index()
     df = df.rename(columns={'discourse_text':'argument',
                             'predictions':'example'})
     # split 
@@ -58,17 +61,22 @@ def load_dataset(tokenizer):
     val_args = Subset(df['argument'], indices[n_train:])
     train_exps = Subset(df['example'], indices[:n_train])
     val_exps = Subset(df['example'], indices[n_train:])
+    train_tpcs = Subset(df['example'], indices[:n_train])
+    val_tpcs = Subset(df['example'], indices[n_train:])
+    train_typs = Subset(df['example'], indices[:n_train])
+    val_typs = Subset(df['example'], indices[n_train:])
 
      # generate class
-    train_dataset = ExampleDataset(train_args, train_exps, 
+    train_dataset = ExampleDataset(train_args, train_exps, train_tpcs, train_typs
                                    tokenizer, max_length=250)
     
-    return train_dataset, (val_args, val_exps)
+    return train_dataset, (val_args, val_exps, val_tpcs, val_typs)
 
 torch.manual_seed(42)
 model_name = "gpt2"
 #model_name = "EleutherAI/gpt-neo-2.7B"
-
+#special_tokens_dict = {'eos_token': eos, 'bos_token': bos, 'pad_token': pad}
+#tokenizer_orig.add_special_tokens(special_tokens_dict)
 tokenizer = AutoTokenizer.from_pretrained(model_name, 
                                           bos_token='<|startoftext|>', 
                                           eos_token='<|endoftext|>', 
@@ -106,7 +114,7 @@ print("start training")
 
 trainer.train()
 
-trainer.save_model("./models")
+trainer.save_model("./models/gpt2")
 
 # eval
 
@@ -117,9 +125,11 @@ print("start evaluating")
 results = dict()
 idx = 0
 
-for argument, example in tqdm(zip(val_dataset[0], val_dataset[1])):
+for argument, example, topic, disctype in tqdm(zip(val_dataset[0], val_dataset[1], val_dataset[2], val_dataset[3])):
     #prepare promp
-    prep_argument = f'<|startoftext|>Argument: {argument}\nRewrite a more effective version: '
+    prep_argument = (f'<|startoftext|>For an essay on the topic {topic}, '
+                             f'give a better example for this ineffective {disctype}'
+                             f' : {argument}Better example : {example}<|endoftext|>')
     generated = tokenizer(prep_argument, 
                       return_tensors="pt").input_ids.cuda()
     #generate

@@ -12,7 +12,7 @@ from tqdm import tqdm
 import random
 
 import torch
-from datasets import concatenate_datasets, load_dataset
+from datasets import concatenate_datasets, load_dataset, load_metric
 from torch.utils.data import Dataset, Subset, random_split
 from torch.profiler import profile, record_function, ProfilerActivity
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, DataCollatorForSeq2Seq, Seq2SeqTrainingArguments, Seq2SeqTrainer, IntervalStrategy
@@ -44,7 +44,12 @@ def prepare_dataset(tokenizer):
     print(f"Max target length: {max_target_length}")
 
     # split 
-    dataset = dataset.train_test_split(test_size=0.01)
+    dataset_train_test = dataset.train_test_split(test_size=0.05)
+    dataset_train_val = dataset_train_test['train'].train_test_split(test_size=0.1)
+
+    dataset['train'] = dataset_train_val['train']
+    dataset['val'] = dataset_train_val['test']
+    dataset['test'] = dataset_train_test['test']
 
     # tokenize train dataset
     def preprocess(data):
@@ -62,9 +67,9 @@ def prepare_dataset(tokenizer):
         return model_inputs
 
     # process dataset
-    tokenized_trained = dataset["train"].map(preprocess, batched=True, remove_columns=['argument', 'example', 'topic'])
+    tokenized_dataset = dataset.map(preprocess, batched=True, remove_columns=['argument', 'example', 'topic'])
     
-    return tokenized_trained, dataset["test"]
+    return tokenized_dataset
 
 # load data, tokenizer, and model
 
@@ -75,14 +80,12 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 model = AutoModelForSeq2SeqLM.from_pretrained(model_name).cuda()
 
-train_dataset, test_dataset = prepare_dataset(tokenizer)
+tokenized_dataset = prepare_dataset(tokenizer)
 
 
 # train
 
 data_collator = DataCollatorForSeq2Seq(tokenizer)
-         
-generated = tokenizer("<|startoftext|>", return_tensors="pt").input_ids.cuda()
 
 training_args = Seq2SeqTrainingArguments(output_dir='./results',
                                         per_device_train_batch_size=2,
@@ -104,8 +107,11 @@ training_args = Seq2SeqTrainingArguments(output_dir='./results',
     
 trainer = Seq2SeqTrainer(model=model, 
         args=training_args, 
-        train_dataset=train_dataset,
-        data_collator = data_collator)
+        train_dataset=tokenized_dataset['train'],
+        eval_dataset=tokenized_dataset['eval'],
+        data_collator = data_collator
+        tokenizer=tokenizer,
+        compute_metrics=compute_metrics)
 
 print("start training")
 

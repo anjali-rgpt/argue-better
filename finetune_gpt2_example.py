@@ -24,7 +24,7 @@ class ExampleDataset(Dataset):
         for argument, example, topic, disctype in zip(argument_list, example_list, topic_list, disctype_list):
             prep_argument = (f'<|startoftext|>For an essay on the topic {topic}, '
                              f'give a better example for this ineffective {disctype}'
-                             f' : {argument}Better example : {example}<|endoftext|>')
+                             f' : {argument}\n<|sep|>Better example : {example}<|endoftext|>')
             #prep_argument = f'<|startoftext|>Argument: {argument}\nRewrite a more effective version: {example}<|endoftext|>'
             # tokenize 
             encodings_dict = tokenizer(prep_argument, 
@@ -50,6 +50,8 @@ def load_dataset(tokenizer):
     filepath = "data/effective/dataset_with_best_example_and_topic.csv"
     df = pd.read_csv(filepath)
     df = df.sample(1000).reset_index()
+    max_length = max([len(tokenizer.encode(text)) for text in df['discourse_text']])
+    print("Max length: {}".format(max_length))
     
     # split 
     n = len(df)
@@ -67,7 +69,7 @@ def load_dataset(tokenizer):
 
      # generate class
     train_dataset = ExampleDataset(train_args, train_exps, train_tpcs, train_typs,
-                                   tokenizer, max_length=250)
+                                   tokenizer, max_length=max_length*2)
     
     return train_dataset, (val_args, val_exps, val_tpcs, val_typs)
 
@@ -126,9 +128,9 @@ idx = 0
 
 for argument, example, topic, disctype in tqdm(zip(val_dataset[0], val_dataset[1], val_dataset[2], val_dataset[3])):
     #prepare promp
-    prep_argument = (f'<|startoftext|>For an essay on the topic {topic}, \n'
-                             f'give a better example for this ineffective {disctype}'
-                             f' : {argument}\nBetter example : ')
+    prep_argument = (f'<|startoftext|>For an essay on the topic {topic}, '
+                        f'give a better example for this ineffective {disctype}'
+                        f' : {argument}\n<|sep|>Better example : ')
     generated = tokenizer(prep_argument, 
                       return_tensors="pt").input_ids.cuda()
     #generate

@@ -1,0 +1,27 @@
+{
+    "0": {
+        "input": "it would show more creative projects, ",
+        "pred": "Argument: it would show more creative projects, \nRewrite a more effective version: \n\" \nloewhend to Thomas Eckhort (we dont go",
+        "true": "the projects will be more creative, "
+    },
+    "1": {
+        "input": "The things that go on in florida about keeping in electorial college is working for us there are good reasons and bad reason where to keep it or change it to popular vote. ",
+        "pred": "Argument: The things that go on in florida about keeping in electorial college is working for us there are good reasons and bad reason where to keep it or change it to popular vote. \nRewrite a more effective version: \n\nA statehouse would greatly improve every aspect for many reasons why school systems are operating efficiently\u00a0 by ensuring our electors are voting even before the election time but no one votes during his election which proves at the time. Another reason is the schools use the state and their legislators for electoral benefits like giving college out of cons the students and all for good. One factor you can do is to improve an electoral electoral board to better that its elector from states, who had an Electoral College which he vote to receive votes the state can be happy giving up even as good as our president who wont have the votes that",
+        "true": "I am writing to the state senator of florida to argue in favor of keeping the Electoral College. "
+    },
+    "2": {
+        "input": "Most worrying would be the prospect of the tie in the electoral vote by any means in that type of case the election would be assigned for the House of Representatives where state delegations vote on the president because each state cast only one vote. ",
+        "pred": "Argument: Most worrying would be the prospect of the tie in the electoral vote by any means in that type of case the election would be assigned for the House of Representatives where state delegations vote on the president because each state cast only one vote. \nRewrite a more effective version: ",
+        "true": "Some may say that the prospect of a tie in the electoral vote is something to worry about. "
+    },
+    "3": {
+        "input": "the car is a waste of time. ",
+        "pred": "Argument: the car is a waste of time. \nRewrite a more effective version: \nRewrite a less common",
+        "true": "Driverless cars are so expenseive its not practical to own one "
+    },
+    "4": {
+        "input": "For what reason this is going to effect everyone, making all your students do this requirement might get alto of parents to come to your school, just to punish their kids for doing certain things and bringing them into awkward situations. ",
+        "pred": "Argument: For what reason this is going to effect everyone, making all your students do this requirement might get alto of parents to come to your school, just to punish their kids for doing certain things and bringing them into awkward situations. \nRewrite a more effective version:  The proof are people making multiple trips into various restaurants but leaving off their face. The problem, on the plus end all, there's another one on college that is just how that involves lots for me not many other students don't do an easy thing or leave the spot to take other students as well. If there are some extra classes that don't fit your situation, there is another issue with how much extra kids are gonna learn to do while the process goes on  or ",
+        "true": "I think it shouldn't be required because when students are required to do something they usually don't want to do it "
+    }
+}

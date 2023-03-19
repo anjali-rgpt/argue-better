@@ -42,10 +42,24 @@ class ExampleDataset(Dataset):
     def __getitem__(self, idx):
         return self.input_ids[idx], self.attn_masks[idx]
     
+def preprocess(df, arg_col, exp_col):
+    print(sum(df['augmented_predictions'].str.contains('\u00a0')))
+    print(sum(df['augmented_predictions'].str.contains('\xa0')))
+    print(sum(df['augmented_predictions'].str.contains('\n')))
+
+    # replace 
+    #df[arg_col] = df.apply(lambda row: remove_publication_headline(row[arg_col], row['publication']), axis = 1)
+
+    # Keep the first 100 words from the content
+    #news_df[exp_col] = news_df[exp_col].str.split(' ').apply(lambda x: ' '.join(x[:100]))
+
+    return df
+    
 def load_dataset(tokenizer):
     # load dataset
     filepath = "data/effective/augmented_predictions_all.csv"
     df = pd.read_csv(filepath)
+    df = preprocess(df, arg_col='discourse_text', exp_col='augmented_predictions')
     df = df.sample(1000).reset_index()
     max_length = max([len(tokenizer.encode(text)) for text in df['discourse_text']])
     print("Max length: {}".format(max_length))

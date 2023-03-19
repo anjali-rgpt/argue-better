@@ -17,11 +17,13 @@ from transformers import AutoTokenizer, TrainingArguments, Trainer, AutoModelFor
 
 # Dataset Class
 class ExampleDataset(Dataset):
-    def __init__(self, argument_list, example_list, topic_list, disctype_list, context_list, tokenizer, max_length):
+    def __init__(self, argument_list, example_list, topic_list, disctype_list, tokenizer, max_length):
         self.input_ids = []
         self.attn_masks = []
-        for argument, example, topic, disctype, context in zip(argument_list, example_list, topic_list, disctype_list, context_list):
-            prep_argument = f'<|startoftext|>Topic name: {topic} <|sep|> Discourse type: {disctype} <|sep|> Context: {context} <|sep|> Argument: {argument} \n<|sep|>Better example: {example}<|endoftext|>'
+        for argument, example, topic, disctype in zip(argument_list, example_list, topic_list, disctype_list):
+            prep_argument = (f'<|startoftext|>Give a better example for this ineffective {disctype}'
+                             f' : {argument}Better example : {example}<|endoftext|>')
+            # tokenize 
             encodings_dict = tokenizer(prep_argument, 
                                        truncation=True,
                                        max_length = max_length, 
@@ -45,7 +47,7 @@ def load_dataset(tokenizer):
     filepath = "data/effective/augmented_predictions_all.csv"
     df = pd.read_csv(filepath)
     df = df.sample(1000).reset_index()
-    max_length = max([len(tokenizer.encode(text)) for text in df['discourse_text']]) + max([len(tokenizer.encode(text)) for text in df['context_predictions']]) + 150
+    max_length = max([len(tokenizer.encode(text)) for text in df['discourse_text']])
     print("Max length: {}".format(max_length))
     
     # split 
@@ -61,15 +63,12 @@ def load_dataset(tokenizer):
     val_tpcs = Subset(df['topics'], indices[n_train:])
     train_typs = Subset(df['discourse_type'], indices[:n_train])
     val_typs = Subset(df['discourse_type'], indices[n_train:])
-    train_cnts = Subset(df['context_predictions'], indices[:n_train])
-    val_cnts = Subset(df['context_predictions'], indices[n_train:])
-
 
      # generate class
-    train_dataset = ExampleDataset(train_args, train_exps, train_tpcs, train_typs, train_cnts,
-                                   tokenizer, max_length=tokenizer.model_max_length) #1024
+    train_dataset = ExampleDataset(train_args, train_exps, train_tpcs, train_typs,
+                                   tokenizer, max_length=tokenizer.model_max_length)
     
-    return train_dataset, (val_args, val_exps, val_tpcs, val_typs, val_cnts)
+    return train_dataset, (val_args, val_exps, val_tpcs, val_typs)
 
 torch.manual_seed(42)
 model_name = "gpt2"
@@ -113,7 +112,7 @@ print("start training")
 
 trainer.train()
 
-trainer.save_model("./models/gpt2/context")
+trainer.save_model("./models/gpt2/aug")
 
 # eval
 
@@ -124,9 +123,10 @@ print("start evaluating")
 results = dict()
 idx = 0
 
-for argument, example, topic, disctype, context in tqdm(zip(val_dataset[0], val_dataset[1], val_dataset[2], val_dataset[3], val_dataset[4])):
+for argument, example, topic, disctype in tqdm(zip(val_dataset[0], val_dataset[1], val_dataset[2], val_dataset[3])):
     #prepare promp
-    prep_argument = f'<|startoftext|>Topic name: {topic} <|sep|> Discourse type: {disctype} <|sep|> Context: {context} <|sep|> Argument: {argument} \n<|sep|>Better example: '
+    prep_argument = (f'<|startoftext|>Give a better example for this ineffective {disctype}'
+                             f' : {argument}Better example : ')
     generated = tokenizer(prep_argument, 
                       return_tensors="pt").input_ids.cuda()
     #generate
@@ -143,12 +143,15 @@ for argument, example, topic, disctype, context in tqdm(zip(val_dataset[0], val_
                                     num_return_sequences=20)
 
     pred = tokenizer.decode(sample_outputs[0], skip_special_tokens=True)
-    pred = pred.replace(prep_argument, '')
+    input = f'Give a better example for this ineffective {disctype} : {argument}Better example :'
+    pred = pred.replace(input, '')
     results[idx] = {'input': argument, 
                     'pred': pred,
                     'true': example}
     idx += 1
 
+    print(f'input: {argument}\npred: {pred}\ntrue: {example}')
+
 json_output = json.dumps(results, indent=4) 
-with open("data/effective/finetune_gpt2_example_context1.json", "w") as outfile:
-        outfile.write(json_output)
+#with open("data/effective/finetune_gpt2_example_aug.json", "w") as outfile:
+#        outfile.write(json_output)

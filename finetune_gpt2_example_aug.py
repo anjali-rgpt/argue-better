@@ -49,9 +49,7 @@ def preprocess(df, cols):
         df[col] = df[col].apply(lambda s: re.sub('\xA0', ' ', s))
         df[col] = df[col].apply(lambda s: s.replace('\n', ' '))
     
-    print(sum(df['augmented_predictions'].str.contains('\u00a0')))
-    print(sum(df['augmented_predictions'].str.contains('\xa0')))
-    print(sum(df['augmented_predictions'].str.contains('\n')))
+    print(df.sample(3))
 
     # Keep the first 100 words from the content
     #news_df[exp_col] = news_df[exp_col].str.split(' ').apply(lambda x: ' '.join(x[:100]))
@@ -63,7 +61,7 @@ def load_dataset(tokenizer):
     filepath = "data/effective/augmented_predictions_all.csv"
     df = pd.read_csv(filepath)
     df = preprocess(df, cols=['discourse_text', 'augmented_predictions'])
-    df = df.sample(1000).reset_index()
+    #df = df.sample(1000).reset_index()
     max_length = max([len(tokenizer.encode(text)) for text in df['discourse_text']])
     print("Max length: {}".format(max_length))
     
@@ -159,7 +157,7 @@ for argument, example, topic, disctype in tqdm(zip(val_dataset[0], val_dataset[1
                                     do_sample=True, 
                                     top_k=50,
                                     top_p=0.95, 
-                                    #temperature=1.9,  
+                                    temperature=1.3,  
                                     num_return_sequences=20)
 
     pred = tokenizer.decode(sample_outputs[0], skip_special_tokens=True)
@@ -173,6 +171,6 @@ for argument, example, topic, disctype in tqdm(zip(val_dataset[0], val_dataset[1
     print(f'input: {argument}\npred: {pred}\ntrue: {example}')
 
 #json_output = json.dumps(results, indent=4) 
-with open("data/effective/finetune_gpt2_example_aug.json", "w") as outfile:
+with open("data/effective/finetune_gpt2_example_aug_full.json", "w") as outfile:
     json.dump(results, outfile)
 #    outfile.write(json_output)
